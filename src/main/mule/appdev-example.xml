@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="823cd6e1-b9bc-42e6-8e4a-c505ef98d883" >
+		<vm:queues >
+			<vm:queue queueName="goodbyeQueue" />
+		</vm:queues>
+	</vm:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="526b2fbc-1049-4f3a-a271-8d7d6c4059bd" >
+		<http:listener-connection host="0.0.0.0" port="8085" />
+	</http:listener-config>
+	<flow name="appdev-exampleFlow" doc:id="cb342cb6-7ba2-4032-bd76-7c53be8a647a" >
+		<http:listener doc:name="Listener" doc:id="4d88b711-a4df-44b9-874f-ea126cb3527f" path="/hellopath" config-ref="HTTP_Listener_config"/>
+		<set-payload value="#[payload]" doc:name="hello message" doc:id="3ef18373-5120-413e-a0e2-ab15ea79bd7f" />
+		<set-variable value="#[attributes.queryParams.Age]" doc:name="Set Variable" doc:id="6d8fee57-9c99-4f39-ab8b-fb60221dcf2e" variableName="x"/>
+		<vm:publish-consume queueName="goodbyeQueue" doc:name="Publish consume" doc:id="4c6cf194-e63f-448a-9a42-a9a0fd9cc966" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="payload" doc:id="95ddd981-225e-4767-8d66-5de5b567a17d" message="Messsage processed"/>
+	</flow>
+	<flow name="GoodbyeFlow" doc:id="4cadfdcb-2885-4f6b-a9e1-3731b134c0cc" >
+		<vm:listener queueName="goodbyeQueue" doc:name="Listener" doc:id="26de78ff-104d-498f-81af-1f2da9046077" config-ref="VM_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="d1fe38d0-69f8-4022-9cd8-9d947ad0a19f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f1a72d8a-3a00-48f5-85dd-6e1fb9acf7c0" message="#[payload]"/>
+	</flow>
+</mule>
